@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { detectBias } from './utils/biasDetector';
+import { generateCompletion } from './utils/gpt';
 
 const taskTypes = [
   'Summarization',
@@ -11,6 +12,9 @@ const taskTypes = [
 function App() {
   const [task, setTask] = useState(taskTypes[0]);
   const [customPrompt, setCustomPrompt] = useState('');
+  const [modelResponse, setModelResponse] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const biasResults = detectBias(customPrompt);
 
@@ -25,42 +29,47 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  // Build map of biased terms for fast lookup
+  const handleGenerate = async () => {
+    setLoading(true);
+    setError('');
+    setModelResponse('');
+    try {
+      const response = await generateCompletion(customPrompt);
+      setModelResponse(response);
+    } catch (err) {
+      setError('⚠️ Failed to fetch model response.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Build map of biased terms
   const biasMap = biasResults.reduce((map, item) => {
     map[item.term.toLowerCase()] = item;
     return map;
   }, {});
 
-  // Highlight biased terms in preview
   const getHighlightedText = (text) => {
-  const words = text.split(/(\s+)/); // Keep whitespace
-
-  return words.map((word, index) => {
-    const cleanWord = word.toLowerCase().replace(/[.,!?;:]$/, '');
-    const biasInfo = biasMap[cleanWord];
-
-    if (biasInfo) {
-      return (
-        <span
-          key={index}
-          className="group relative cursor-help"
-        >
-          <span className="bg-yellow-400 text-black font-semibold px-1 rounded">
-            {word}
+    const words = text.split(/(\s+)/);
+    return words.map((word, index) => {
+      const cleanWord = word.toLowerCase().replace(/[.,!?;:]$/, '');
+      const biasInfo = biasMap[cleanWord];
+      if (biasInfo) {
+        return (
+          <span key={index} className="group relative cursor-help">
+            <span className="bg-yellow-400 text-black font-semibold px-1 rounded">
+              {word}
+            </span>
+            <span className="absolute z-10 hidden group-hover:block bg-yellow-100 text-black text-sm p-2 rounded shadow-lg mt-1 w-64 left-1/2 -translate-x-1/2 whitespace-normal">
+              ⚠️ <strong>{biasInfo.term}</strong> ({biasInfo.type})<br />
+              Consider: <em>{biasInfo.suggestion}</em>
+            </span>
           </span>
-
-          <span className="absolute z-10 hidden group-hover:block bg-yellow-100 text-black text-sm p-2 rounded shadow-lg mt-1 w-64 left-1/2 -translate-x-1/2 whitespace-normal">
-            ⚠️ <strong>{biasInfo.term}</strong> ({biasInfo.type})<br />
-            Consider: <em>{biasInfo.suggestion}</em>
-          </span>
-        </span>
-      );
-    }
-
-    return word;
-  });
-};
-
+        );
+      }
+      return word;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
@@ -113,12 +122,34 @@ function App() {
         </div>
       )}
 
-      <button
-        onClick={handleExport}
-        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold"
-      >
-        Export to JSONL
-      </button>
+      <div className="flex flex-col md:flex-row gap-4">
+        <button
+          onClick={handleExport}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-semibold"
+        >
+          Export to JSONL
+        </button>
+
+        <button
+          onClick={handleGenerate}
+          className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded text-white font-semibold"
+        >
+          {loading ? 'Generating...' : 'Preview Model Response'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="mt-4 text-red-400">
+          {error}
+        </div>
+      )}
+
+      {modelResponse && (
+        <div className="mt-6 bg-gray-800 p-4 rounded border border-purple-400">
+          <p className="text-purple-300 font-semibold mb-2">🤖 Model Output:</p>
+          <pre className="whitespace-pre-wrap text-white">{modelResponse}</pre>
+        </div>
+      )}
     </div>
   );
 }

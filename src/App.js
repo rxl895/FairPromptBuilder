@@ -33,19 +33,34 @@ function App() {
 
   // Highlight biased terms in preview
   const getHighlightedText = (text) => {
-    const words = text.split(/(\s+)/); // keep spaces
-    return words.map((word, index) => {
-      const cleanWord = word.toLowerCase().replace(/[.,!?;:]$/, '');
-      if (biasMap[cleanWord]) {
-        return (
-          <span key={index} className="bg-yellow-400 text-black font-semibold px-1 rounded">
+  const words = text.split(/(\s+)/); // Keep whitespace
+
+  return words.map((word, index) => {
+    const cleanWord = word.toLowerCase().replace(/[.,!?;:]$/, '');
+    const biasInfo = biasMap[cleanWord];
+
+    if (biasInfo) {
+      return (
+        <span
+          key={index}
+          className="group relative cursor-help"
+        >
+          <span className="bg-yellow-400 text-black font-semibold px-1 rounded">
             {word}
           </span>
-        );
-      }
-      return word;
-    });
-  };
+
+          <span className="absolute z-10 hidden group-hover:block bg-yellow-100 text-black text-sm p-2 rounded shadow-lg mt-1 w-64 left-1/2 -translate-x-1/2 whitespace-normal">
+            ⚠️ <strong>{biasInfo.term}</strong> ({biasInfo.type})<br />
+            Consider: <em>{biasInfo.suggestion}</em>
+          </span>
+        </span>
+      );
+    }
+
+    return word;
+  });
+};
+
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">

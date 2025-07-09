@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { detectBias } from './utils/biasDetector';
 
 const taskTypes = [
   'Summarization',
@@ -21,6 +22,8 @@ function App() {
     a.click();
     URL.revokeObjectURL(url);
   };
+
+  const biasResults = detectBias(customPrompt);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
@@ -49,9 +52,22 @@ function App() {
         />
       </div>
 
-      <div className="mb-4">
-        <p className="text-yellow-400">⚠️ Bias Warning Placeholder: (this will highlight terms)</p>
-      </div>
+      {biasResults.length > 0 ? (
+        <div className="mb-4">
+          <p className="text-yellow-400 font-semibold">⚠️ Potential Bias Detected:</p>
+          <ul className="list-disc list-inside text-yellow-300">
+            {biasResults.map((item, idx) => (
+              <li key={idx}>
+                <strong>{item.term}</strong> ({item.type}) → consider <em>{item.suggestion}</em>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="mb-4">
+          <p className="text-green-400">✅ No bias indicators detected.</p>
+        </div>
+      )}
 
       <button
         onClick={handleExport}

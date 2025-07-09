@@ -20,11 +20,13 @@ export async function generateCompletion(prompt) {
     }
   );
 
+  const text = await response.text(); // Read response even if not OK
+  console.log("Raw HF Response:", text);
+
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to fetch Hugging Face response: ${errorText}`);
+    throw new Error(`HF API Error: ${text}`);
   }
 
-  const data = await response.json();
+  const data = JSON.parse(text);
   return typeof data === "string" ? data : data[0]?.generated_text || "No output.";
 }

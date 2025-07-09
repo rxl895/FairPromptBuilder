@@ -6,12 +6,12 @@ const BIAS_TERMS = [
   { word: "he", suggestion: "they", type: "gendered pronoun" },
   { word: "she", suggestion: "they", type: "gendered pronoun" },
   { word: "crazy", suggestion: "mentally unwell", type: "mental health" },
-  { word: "insane", suggestion: "irrational" or "mentally unwell", type: "mental health" },
+  { word: "insane", suggestion: "mentally unwell", type: "mental health" },
   { word: "illegal alien", suggestion: "undocumented immigrant", type: "racial" },
   { word: "blacklist", suggestion: "blocklist", type: "racial undertone" },
   { word: "whitelist", suggestion: "allowlist", type: "racial undertone" },
-  { word: "manmade", suggestion: "human-made" or "artificial", type: "gendered" },
-  { word: "native", suggestion: "local" or "original inhabitant", type: "racial" },
+  { word: "manmade", suggestion: "human-made", type: "gendered" },
+  { word: "native", suggestion: "original inhabitant", type: "racial" },
 ];
 
 // Detect biased terms in the input string

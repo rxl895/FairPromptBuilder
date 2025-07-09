@@ -12,6 +12,8 @@ function App() {
   const [task, setTask] = useState(taskTypes[0]);
   const [customPrompt, setCustomPrompt] = useState('');
 
+  const biasResults = detectBias(customPrompt);
+
   const handleExport = () => {
     const jsonl = JSON.stringify({ task, prompt: customPrompt }) + '\n';
     const blob = new Blob([jsonl], { type: 'application/jsonl' });
@@ -23,7 +25,27 @@ function App() {
     URL.revokeObjectURL(url);
   };
 
-  const biasResults = detectBias(customPrompt);
+  // Build map of biased terms for fast lookup
+  const biasMap = biasResults.reduce((map, item) => {
+    map[item.term.toLowerCase()] = item;
+    return map;
+  }, {});
+
+  // Highlight biased terms in preview
+  const getHighlightedText = (text) => {
+    const words = text.split(/(\s+)/); // keep spaces
+    return words.map((word, index) => {
+      const cleanWord = word.toLowerCase().replace(/[.,!?;:]$/, '');
+      if (biasMap[cleanWord]) {
+        return (
+          <span key={index} className="bg-yellow-400 text-black font-semibold px-1 rounded">
+            {word}
+          </span>
+        );
+      }
+      return word;
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white p-8">
@@ -45,11 +67,18 @@ function App() {
       <div className="mb-4">
         <label className="block mb-1 font-medium">Custom Prompt:</label>
         <textarea
-          className="w-full h-40 p-3 rounded bg-gray-800 text-white"
+          className="w-full h-40 p-3 rounded bg-gray-800 text-white border border-gray-700"
           placeholder="Type your prompt here..."
           value={customPrompt}
           onChange={(e) => setCustomPrompt(e.target.value)}
         />
+      </div>
+
+      <div className="mb-4 bg-gray-800 text-white p-4 rounded border border-yellow-400">
+        <p className="text-yellow-300 font-semibold mb-2">🧠 Highlighted Prompt Preview:</p>
+        <div className="whitespace-pre-wrap text-white leading-relaxed">
+          {getHighlightedText(customPrompt)}
+        </div>
       </div>
 
       {biasResults.length > 0 ? (

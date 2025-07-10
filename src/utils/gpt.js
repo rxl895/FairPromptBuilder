@@ -1,5 +1,5 @@
 export async function generateCompletion(prompt) {
-  const response = await fetch("https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct", {
+  const response = await fetch("https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${process.env.REACT_APP_HF_API_TOKEN}`,
@@ -16,8 +16,8 @@ export async function generateCompletion(prompt) {
   });
 
   if (!response.ok) {
-    const error = await response.text();
-    console.error("HF Raw Response:", error);
+    const errMsg = await response.text();
+    console.error("❌ HF API Error:", errMsg);
     throw new Error("Failed to fetch Hugging Face response");
   }
 

@@ -9,17 +9,23 @@ const taskTypes = [
   'Creative Writing',
 ];
 
+const modelOptions = {
+  "Mistral 7B Instruct": "mistralai/Mistral-7B-Instruct-v0.2",
+  "Zephyr 7B Beta": "HuggingFaceH4/zephyr-7b-beta",
+};
+
 function App() {
   const [task, setTask] = useState(taskTypes[0]);
   const [customPrompt, setCustomPrompt] = useState('');
   const [modelResponse, setModelResponse] = useState('');
+  const [selectedModel, setSelectedModel] = useState(Object.keys(modelOptions)[0]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const biasResults = detectBias(customPrompt);
 
   const handleExport = () => {
-    const jsonl = JSON.stringify({ task, prompt: customPrompt }) + '\n';
+    const jsonl = JSON.stringify({ task, prompt: customPrompt, model: modelOptions[selectedModel] }) + '\n';
     const blob = new Blob([jsonl], { type: 'application/jsonl' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -34,7 +40,7 @@ function App() {
     setError('');
     setModelResponse('');
     try {
-      const response = await generateCompletion(customPrompt);
+      const response = await generateCompletion(customPrompt, modelOptions[selectedModel]);
       setModelResponse(response);
     } catch (err) {
       setError('⚠️ Failed to fetch model response.');
@@ -43,7 +49,6 @@ function App() {
     }
   };
 
-  // Build map of biased terms
   const biasMap = biasResults.reduce((map, item) => {
     map[item.term.toLowerCase()] = item;
     return map;
@@ -75,6 +80,7 @@ function App() {
     <div className="min-h-screen bg-gray-950 text-white p-8">
       <h1 className="text-3xl font-bold mb-6">🚀 FairPromptBuilder</h1>
 
+      {/* Task selection */}
       <div className="mb-4">
         <label className="block mb-1 font-medium">Select Task Type:</label>
         <select
@@ -88,6 +94,22 @@ function App() {
         </select>
       </div>
 
+      {/* Model selection */}
+      <div className="mb-4">
+        <label className="block mb-1 font-medium">Select Model:</label>
+        <select
+          className="p-2 rounded bg-gray-800 text-white"
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+        >
+          {Object.keys(modelOptions).map((modelName) => (
+            <option key={modelName} value={modelName}>{modelName}</option>
+          ))}
+        </select>
+        <p className="text-sm mt-1 text-gray-400">📌 Currently using: <code>{modelOptions[selectedModel]}</code></p>
+      </div>
+
+      {/* Prompt input */}
       <div className="mb-4">
         <label className="block mb-1 font-medium">Custom Prompt:</label>
         <textarea
@@ -98,6 +120,7 @@ function App() {
         />
       </div>
 
+      {/* Prompt preview */}
       <div className="mb-4 bg-gray-800 text-white p-4 rounded border border-yellow-400">
         <p className="text-yellow-300 font-semibold mb-2">🧠 Highlighted Prompt Preview:</p>
         <div className="whitespace-pre-wrap text-white leading-relaxed">
@@ -105,6 +128,7 @@ function App() {
         </div>
       </div>
 
+      {/* Bias check */}
       {biasResults.length > 0 ? (
         <div className="mb-4">
           <p className="text-yellow-400 font-semibold">⚠️ Potential Bias Detected:</p>
@@ -122,6 +146,7 @@ function App() {
         </div>
       )}
 
+      {/* Action buttons */}
       <div className="flex flex-col md:flex-row gap-4">
         <button
           onClick={handleExport}
@@ -138,6 +163,7 @@ function App() {
         </button>
       </div>
 
+      {/* Output or error */}
       {error && (
         <div className="mt-4 text-red-400">
           {error}

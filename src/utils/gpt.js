@@ -1,5 +1,6 @@
 export async function generateCompletion(prompt) {
-  const response = await fetch("https://api-inference.huggingface.co/models/bigcode/starcoder2-3b", {
+  const response = await fetch("https://api-inference.huggingface.co/models/google/flan-t5-base" ,
+ {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${process.env.REACT_APP_HF_API_TOKEN}`,
